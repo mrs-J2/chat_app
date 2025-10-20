@@ -1,19 +1,21 @@
+import 'package:flutter/material.dart';
 import 'package:chat_app/components/my_button.dart';
 import 'package:chat_app/components/my_textfield.dart';
-import 'package:flutter/material.dart';
-class LoginPage extends StatelessWidget{
+class RegisterPage extends StatelessWidget{
+  
   //email and pwdtxt controllers
 final TextEditingController _emailController = TextEditingController();
 final TextEditingController _pwController = TextEditingController();
+final TextEditingController _confirmPwController = TextEditingController();
 
-//go to register tap
+//go to login tap
 final void Function()? onTap;
-  LoginPage({super.key, required this.onTap});
-
-  //login methode
-  void login(){
-    //login impl
+  RegisterPage({super.key, required this.onTap});
+ //register methode
+  void register(){
+    //register impl
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ final void Function()? onTap;
           
             //welcome back message
             Text(
-              "Welcome back dude",
+              "Let's create an account for you",
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 16,
@@ -53,11 +55,18 @@ final void Function()? onTap;
               obscureText: true,
               controller: _pwController),
 
+              const SizedBox(height: 10),
+            //confirm password textfield
+            MyTextfield(
+              hintText: "Confirm Password",
+              obscureText: true,
+              controller: _confirmPwController),
+
               const SizedBox(height: 25),
             //login button
             MyButton(
-              text: "Login",
-              onTap: login,
+              text: "Register",
+              onTap: register,
             ),
             const SizedBox(height: 25),
 
@@ -66,7 +75,7 @@ final void Function()? onTap;
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "new user? ",
+                  "already have an account? ",
                   style: 
                   TextStyle(color: Theme.of(context).colorScheme.primary),
                   ),
@@ -74,7 +83,7 @@ final void Function()? onTap;
                 GestureDetector(
                   onTap: onTap,
                   child: Text(
-                    "register now ",
+                    "login now ",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary
@@ -88,5 +97,5 @@ final void Function()? onTap;
         ),
       ),
     );
-  }
-}
+    }
+    }
