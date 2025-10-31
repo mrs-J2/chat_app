@@ -1,3 +1,5 @@
+import 'package:chat_app/services/auth/auth_gate.dart';
+import 'package:chat_app/services/auth/auth_service.dart';
 import 'package:chat_app/components/my_button.dart';
 import 'package:chat_app/components/my_textfield.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +13,23 @@ final void Function()? onTap;
   LoginPage({super.key, required this.onTap});
 
   //login methode
-  void login(){
-    //login impl
+  void login(BuildContext context) async{
+    //lauth service
+    // ignore: non_constant_identifier_names
+    final authService = AuthService();
+     //try login
+    try{
+      await authService.signInWithEmailPassword(_emailController.text, _pwController.text) ;
+    }
+    //catch
+    catch(e){
+      showDialog(
+        context: context,
+         builder: (context) => AlertDialog(
+          title: Text(e.toString()) ,
+         )
+         );
+    }
   }
 
   @override
@@ -57,7 +74,7 @@ final void Function()? onTap;
             //login button
             MyButton(
               text: "Login",
-              onTap: login,
+              onTap: () => login(context),
             ),
             const SizedBox(height: 25),
 

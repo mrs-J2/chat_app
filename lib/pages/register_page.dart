@@ -1,3 +1,4 @@
+import 'package:chat_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/components/my_button.dart';
 import 'package:chat_app/components/my_textfield.dart';
@@ -12,8 +13,32 @@ final TextEditingController _confirmPwController = TextEditingController();
 final void Function()? onTap;
   RegisterPage({super.key, required this.onTap});
  //register methode
-  void register(){
-    //register impl
+  void register(BuildContext context){
+    //get auth service
+    final _auth = AuthService();
+    //si meme password
+    if(_pwController.text == _confirmPwController.text){
+      try{
+       _auth.signUpWithEmailPassword(_emailController.text, _pwController.text);
+      }
+      catch(e){
+      showDialog(
+        context: context,
+         builder: (context) => AlertDialog(
+          title: Text(e.toString()) ,
+         )
+      );
+      }
+    }
+    //si mdps differents
+    else{
+      showDialog(
+        context: context,
+         builder: (context) => AlertDialog(
+          title: Text("passwords don't match") ,
+         )
+         );
+    }
   }
 
 
@@ -66,7 +91,7 @@ final void Function()? onTap;
             //login button
             MyButton(
               text: "Register",
-              onTap: register,
+              onTap: () => register(context),
             ),
             const SizedBox(height: 25),
 
