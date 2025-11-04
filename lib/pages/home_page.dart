@@ -24,28 +24,16 @@ class HomePage extends StatelessWidget{
   @override 
   Widget build(BuildContext context){
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
       drawer: MyDrawer(),
+      body: _buildUserList(),
       appBar: AppBar(
         elevation: 0,
-        title: const Text(
-          "Chats",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
+        title: const Text("Chats"),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.grey,
         ),
-        actions: [
-          IconButton(
-            onPressed:()=> settings(context), 
-            icon:const Icon(Icons.settings_rounded),)
-        ],),
-        //body: _buildUserList(),
-      body: Container(
-        decoration: BoxDecoration(
-        ),
-        child: _buildUserList(),
-      ),
-    );
+      );
   }
 
 
@@ -75,27 +63,33 @@ class HomePage extends StatelessWidget{
 
   }
   //build individual list tile for user
-  Widget _buildUserListItem(
-    Map<String, dynamic> userData, BuildContext context){
-    //display all users except current user
-    if(userData["email"] != _authService.getCurrentUser()!.email){
+  Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
+  final currentUserEmail = _authService.getCurrentUser()?.email;
+
+  // Skip current user
+  if (userData["email"] != currentUserEmail) {
+    final username = userData["username"] ?? "Unknown";
+    final email = userData["email"] ?? "No email";
+    final uid = userData["uid"] ?? "";
+
     return UserTile(
-      text: userData["email"],
+      text: username,
       onTap: () {
-        //tapped on a user -> go to chat page
         Navigator.push(
           context,
           MaterialPageRoute(
-          builder: (context) => ChatPage(
-            recieverEmail: userData["email"],
-            recieverID: userData["uid"],
+            builder: (context) => ChatPage(
+              recieverEmail: email,
+              recieverID: uid,
+              recieverUsername: username,
+            ),
           ),
-          ));
+        );
       },
     );
-  } else{
-    return  Container();
-  
+  } else {
+    return const SizedBox.shrink();
   }
-  }
+}
+
 }

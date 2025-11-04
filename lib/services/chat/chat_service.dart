@@ -7,6 +7,7 @@ class ChatService{
   //get instance of firestore & auth
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  
   //get user stream
   /*
   List<Map<String,dynamic>> = 
@@ -40,14 +41,17 @@ class ChatService{
 
     //create a new message
     Message newMessage = Message(
-      senderID:currentUserEmail ,
-      senderEmail: currentUserID,
-      recieverID: recieverID, message: message,
+      senderID:currentUserID ,
+      senderEmail: currentUserEmail,
+      recieverID: recieverID,
+      message: message,
       timestamp: timestamp);
+
     //construct chat room ID for the two users (sorted to ensure uniqueness)
     List<String> ids = [currentUserID, recieverID];
     ids.sort(); //sort the ids (this ensure the chatroomID is th esame for any 2 people)
     String chatroomID = ids.join('_');
+    
     // add new message to database
     await _firestore
     .collection("chat_rooms")
