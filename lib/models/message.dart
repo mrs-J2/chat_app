@@ -6,15 +6,17 @@ class Message {
   final String recieverID;
   final String message;
   final Timestamp timestamp;
+  final bool isImage;
   Message({
     required this.senderID,
     required this.senderEmail ,
     required this.recieverID,
     required this.message,
     required this.timestamp,
+    this.isImage=false,
+
   });
 
-  //convert to a a map
   Map<String, dynamic> toMap(){
     return{
       'senderID': senderID,
@@ -22,6 +24,7 @@ class Message {
       'recieverID': recieverID,
       'message': message,
       'timestamp': timestamp,
+      'isImage':isImage,
     };
   }
 }
