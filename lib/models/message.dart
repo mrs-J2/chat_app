@@ -7,24 +7,24 @@ class Message {
   final String message;
   final Timestamp timestamp;
   final bool isImage;
+
   Message({
     required this.senderID,
-    required this.senderEmail ,
+    required this.senderEmail,
     required this.recieverID,
     required this.message,
     required this.timestamp,
-    this.isImage=false,
-
+    this.isImage = false,
   });
 
-  Map<String, dynamic> toMap(){
-    return{
+  Map<String, dynamic> toMap() {
+    return {
       'senderID': senderID,
       'senderEmail': senderEmail,
       'recieverID': recieverID,
       'message': message,
       'timestamp': timestamp,
-      'isImage':isImage,
+      'isImage': isImage,
     };
   }
 }

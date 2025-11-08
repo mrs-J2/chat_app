@@ -21,6 +21,10 @@ dependencies:
   video_player: ^2.10.0
   url_launcher: ^6.3.2
   chewie: ^1.0.8
+  flutter_chat_bubble: ^2.0.2
+  flutter_chat_ui: ^1.6.9 # Use latest stable version
+  flutter_chat_types: ^3.6.1
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
