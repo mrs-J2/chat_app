@@ -36,7 +36,7 @@ class ChatService {
   }
 
   //send msg 
-  Future<void> sendMessage(String recieverID, message, {bool isImage = false}) async {
+  Future<void> sendMessage(String recieverID, message, {bool isImage = false,bool isFile = false, String? fileName}) async {
     //get current user info
     final String currentUserID = _auth.currentUser!.uid;
     final String currentUserEmail = _auth.currentUser!.email!;
@@ -50,6 +50,8 @@ class ChatService {
       message: message,
       timestamp: timestamp,
       isImage: isImage,
+      isFile: isFile,
+      fileName: fileName,
     );
 
     //construct chat room ID for the two users
@@ -77,6 +79,29 @@ class ChatService {
       print('❌ Error sending image: $e');
     }
   }
+  Future<void> sendFileMessage(String receiverID, File file) async {
+  try {
+    final bytes = await file.readAsBytes();
+
+    // 🔹 Safety check: prevent Firestore size overflow
+    if (bytes.lengthInBytes > 700 * 1024) {
+      print("⚠️ File too large (${bytes.lengthInBytes / 1024} KB). Max 700 KB allowed.");
+      return;
+    }
+
+    final base64File = base64Encode(bytes);
+    final fileName = file.path.split('/').last;
+
+    final uniqueMessage = "${DateTime.now().millisecondsSinceEpoch}|$base64File";
+
+    await sendMessage(receiverID, uniqueMessage, isFile: true, fileName: fileName);
+
+    print("📁 File sent successfully: $fileName");
+  } catch (e) {
+    print("❌ Error sending file: $e");
+  }
+}
+
 
   //get message
   Stream<QuerySnapshot> getMessages(String userId, otherUserID) {
