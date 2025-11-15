@@ -31,17 +31,13 @@ class FriendsController extends ChangeNotifier {
     super.dispose();
   }
 
-  // --------------------------------------------------------------
-  // 1. Real-time listeners (server-first)
-  // --------------------------------------------------------------
+
   void _listenToUsers() {
-    // ---- all other users ------------------------------------------------
     _allUsersSub = _friendsService.getAllUsers().listen((users) {
       allUsers = users;
       notifyListeners();
     });
 
-    // ---- current user (force server on first read) ----------------------
     final uid = _friendsService.currentUser!.uid;
     _userSub = _firestore
         .collection('users')
@@ -58,9 +54,6 @@ class FriendsController extends ChangeNotifier {
     });
   }
 
-  // --------------------------------------------------------------
-  // 2. Initial fetch from server (bypass cache)
-  // --------------------------------------------------------------
   Future<void> _fetchInitialData() async {
     await Future.wait([
       _fetchInitialAllUsers(),
@@ -105,14 +98,8 @@ class FriendsController extends ChangeNotifier {
     }
   }
 
-  // --------------------------------------------------------------
-  // 3. Public refresh (pull-to-refresh)
-  // --------------------------------------------------------------
   Future<void> refresh() async => _fetchInitialData();
 
-  // --------------------------------------------------------------
-  // 4. Service wrappers
-  // --------------------------------------------------------------
   Future<void> sendRequest(String uid) => _friendsService.sendFriendRequest(uid);
   Future<void> acceptRequest(String uid) => _friendsService.acceptFriendRequest(uid);
   Future<void> declineRequest(String uid) => _friendsService.declineFriendRequest(uid);

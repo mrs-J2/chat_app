@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/pages/home_page.dart';
 class AuthGate extends StatelessWidget{
-  const AuthGate({super.key});
+  final VoidCallback? onThemeToggle;          
+  const AuthGate({super.key, this.onThemeToggle});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,11 +13,11 @@ class AuthGate extends StatelessWidget{
         builder: (context, snapshot){
           //user is logged in
           if( snapshot.hasData){
-            return  HomePage();
+            return  HomePage(onThemeToggle: onThemeToggle);
           }
           //user is logged out
           else{
-            return const LoginOrRegister();
+            return LoginOrRegister(onThemeToggle: onThemeToggle);
           }
         }
         ),

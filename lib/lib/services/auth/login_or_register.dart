@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../pages/login_page.dart';
 
 class LoginOrRegister extends StatefulWidget{
-  const LoginOrRegister({super.key});
+  final VoidCallback? onThemeToggle;
+  const LoginOrRegister({super.key,this.onThemeToggle});
 
   @override
   State<LoginOrRegister> createState() => _LoginOrRegisterState();

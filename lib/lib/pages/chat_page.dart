@@ -12,27 +12,51 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:intl/intl.dart'; 
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   final String recieverEmail;
   final String recieverID;
   final String recieverUsername;
 
-  ChatPage({
+  const ChatPage({
     super.key,
     required this.recieverEmail,
     required this.recieverID,
     required this.recieverUsername,
   });
 
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
+  String? _recieverProfilePic;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecieverPic();
+  }
+
+  Future<void> _loadRecieverPic() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.recieverID)
+        .get();
+    if (doc.exists && mounted) {
+      setState(() {
+        _recieverProfilePic = doc.data()?['profilePicUrl'];
+      });
+    }
+  }
 
   // send text message
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      await _chatService.sendMessage(recieverID, _messageController.text);
+      await _chatService.sendMessage(widget.recieverID, _messageController.text);
       _messageController.clear();
     }
   }
@@ -78,9 +102,19 @@ class ChatPage extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         elevation: 0,
-        title: Text(recieverUsername),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.grey,
+        title: Text(widget.recieverUsername),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundImage: _recieverProfilePic != null && _recieverProfilePic!.isNotEmpty
+                ? NetworkImage(_recieverProfilePic!)
+                : null,
+            child: _recieverProfilePic == null || _recieverProfilePic!.isEmpty
+                ? const Icon(Icons.person, size: 18)
+                : null,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
@@ -101,7 +135,7 @@ class ChatPage extends StatelessWidget {
   Widget _buildMessageList() {
     String senderID = _authService.getCurrentUser()!.uid;
     return StreamBuilder(
-      stream: _chatService.getMessages(recieverID, senderID),
+      stream: _chatService.getMessages(widget.recieverID, senderID),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Center(child: Text("Error loading messages"));
@@ -223,8 +257,8 @@ class ChatPage extends StatelessWidget {
           PopupMenuButton<int>(
             icon: const Icon(Icons.attach_file, color: Colors.grey),
             onSelected: (value) {
-              if (value == 0) sendImageMessage(recieverID);
-              if (value == 1) sendFile(recieverID);
+              if (value == 0) sendImageMessage(widget.recieverID);
+              if (value == 1) sendFile(widget.recieverID);
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 0, child: Text("Send Image")),

@@ -14,7 +14,8 @@ import 'package:chat_app/pages/chat_page.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget{
-   const HomePage({super.key});
+   final VoidCallback? onThemeToggle;  
+  const HomePage({super.key, this.onThemeToggle});
    @override 
    State<HomePage> createState() => _HomePageState();
 }
@@ -39,7 +40,7 @@ class _HomePageState extends State<HomePage>{
     final List<Widget> _pages = [
       _buildFriendsChatList(),
       const FriendsPage(), 
-      const SettingsPage(), 
+      SettingsPage(onThemeToggle: widget.onThemeToggle), 
     ];
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -48,8 +49,6 @@ class _HomePageState extends State<HomePage>{
       appBar: AppBar(
         elevation: 0,
         title: const Text("Chats"),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.grey,
         ),
         bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -97,6 +96,7 @@ class _HomePageState extends State<HomePage>{
           children: friendUsers.map((user) {
             return UserTile(
               text: user.username,
+              profilePicUrl: user.profilePicUrl,
               onTap: () {
                 Navigator.push(
                   context,

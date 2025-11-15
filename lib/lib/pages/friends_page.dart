@@ -1,9 +1,8 @@
-
+// lib/pages/friends_page.dart
 import '../controllers/friends_controller.dart';
 import '../models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'chat_page.dart';
 
 class FriendsPage extends StatelessWidget {
@@ -13,7 +12,6 @@ class FriendsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Provider.of<FriendsController>(context);
 
-    // Split users
     final friendsList = controller.allUsers
         .where((u) => controller.friends.contains(u.uid))
         .toList();
@@ -24,16 +22,13 @@ class FriendsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Friends"),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.grey[800],
         elevation: 0,
       ),
       body: controller.allUsers.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              // <-- works now
               onRefresh: controller.refresh,
-              child: ListView( 
+              child: ListView(
                 children: [
                   const Padding(
                     padding: EdgeInsets.all(8.0),
@@ -62,11 +57,17 @@ class FriendsPage extends StatelessWidget {
     );
   }
 
-
   Widget _buildFriendTile(
       BuildContext ctx, FriendsController ctrl, UserModel user) {
     return ListTile(
-      leading: const CircleAvatar(child: Icon(Icons.person)),
+      leading: CircleAvatar(
+        backgroundImage: user.profilePicUrl != null && user.profilePicUrl!.isNotEmpty
+            ? NetworkImage(user.profilePicUrl!)
+            : null,
+        child: user.profilePicUrl == null || user.profilePicUrl!.isEmpty
+            ? const Icon(Icons.person)
+            : null,
+      ),
       title: Text(user.username),
       subtitle: Text(user.email),
       onTap: () => Navigator.push(
@@ -126,7 +127,14 @@ class FriendsPage extends StatelessWidget {
     }
 
     return ListTile(
-      leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+      leading: CircleAvatar(
+        backgroundImage: user.profilePicUrl != null && user.profilePicUrl!.isNotEmpty
+            ? NetworkImage(user.profilePicUrl!)
+            : null,
+        child: user.profilePicUrl == null || user.profilePicUrl!.isEmpty
+            ? const Icon(Icons.person_outline)
+            : null,
+      ),
       title: Text(user.username),
       subtitle: Text(user.email),
       onTap: () {
@@ -148,9 +156,10 @@ class FriendsPage extends StatelessWidget {
               title: const Text("Not Friends"),
               content: const Text("You can’t message this user until you’re friends."),
               actions: [
-                IconButton(icon:Icon(Icons.verified), onPressed:() => Navigator.pop)
-                ],
-          ),);
+                IconButton(icon: Icon(Icons.verified), onPressed: () => Navigator.pop(ctx)),
+              ],
+            ),
+          );
         }
       },
       trailing: trailing,
