@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String uid;
   final String email;
@@ -13,6 +15,8 @@ class UserModel {
   final List<String>? friends;
   final List<String>? friendRequests;
   final List<String>? sentRequests;
+  final bool isOnline;
+  final Timestamp? lastSeen;
 
   UserModel({
     required this.uid,
@@ -25,6 +29,8 @@ class UserModel {
     this.friends,
     this.friendRequests,
     this.sentRequests,
+    this.isOnline = false,
+    this.lastSeen,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String uid) {
@@ -39,6 +45,8 @@ class UserModel {
       friends: List<String>.from(data['friends'] ?? []),
       friendRequests: List<String>.from(data['friendRequests'] ?? []),
       sentRequests: List<String>.from(data['sentRequests'] ?? []),
+      isOnline: data['isOnline'] ?? false,
+      lastSeen: data['lastSeen'],
     );
   }
 
@@ -53,6 +61,8 @@ class UserModel {
       'friends': friends ?? [],
       'friendRequests': friendRequests ?? [],
       'sentRequests': sentRequests ?? [],
+      'isOnline': isOnline,
+      'lastSeen': lastSeen,
     };
   }
 }

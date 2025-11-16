@@ -42,10 +42,12 @@ class ChatService {
   bool isImage = false,
   bool isFile = false,
   String? fileName,
+
 }) async {
   final String currentUserID = _auth.currentUser!.uid;
   final String currentUserEmail = _auth.currentUser!.email!;
   final Timestamp timestamp = Timestamp.now();
+  
 
   Message newMessage = Message(
     senderID: currentUserID,
@@ -57,6 +59,7 @@ class ChatService {
     isFile: isFile,
     fileName: fileName, 
     heartCount: 0,
+    seen: false,
   );
 
   List<String> ids = [currentUserID, recieverID]..sort();

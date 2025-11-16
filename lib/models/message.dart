@@ -10,7 +10,8 @@ class Message {
   final bool isImage;
   final bool isFile;
   final String? fileName;
-  final int heartCount; // ← Only hearts
+  final int heartCount; 
+  final bool seen;
 
   Message({
     required this.senderID,
@@ -22,6 +23,7 @@ class Message {
     this.isFile = false,
     this.fileName,
     this.heartCount = 0,
+    this.seen= false,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,6 +37,7 @@ class Message {
       'isFile': isFile,
       'fileName': fileName,
       'heartCount': heartCount,
+      'seen': seen,
     };
   }
 
@@ -49,6 +52,7 @@ class Message {
       isFile: map['isFile'] ?? false,
       fileName: map['fileName'],
       heartCount: map['heartCount'] ?? 0,
+      seen : map['seen'] ?? false,
     );
   }
 }

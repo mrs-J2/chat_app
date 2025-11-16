@@ -24,7 +24,7 @@ class AuthService {
     return _auth.currentUser;
   }
 
-  // 🔐 sign in
+  //  sign in
   Future<UserCredential> signInWithEmailPassword(
       String email, String password) async {
     try {
@@ -98,8 +98,37 @@ class AuthService {
     }
   }
 
-  // 🚪 sign out
   Future<void> signOut() async {
-    return await _auth.signOut();
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).update({
+        'isOnline': false,
+        'lastSeen': FieldValue.serverTimestamp(),
+      });
+    }
+    await _auth.signOut();
   }
+Future<void> setUserOnline() async {
+  final user = _auth.currentUser;
+  if (user == null) return;
+
+  await _firestore.collection('users').doc(user.uid).update({
+    'isOnline': true,
+    'lastSeen': FieldValue.serverTimestamp(),
+  });
+}
+
+// Set user offline
+Future<void> setUserOffline() async {
+  final user = _auth.currentUser;
+  if (user == null) return;
+
+  await _firestore.collection('users').doc(user.uid).update({
+    'isOnline': false,
+    'lastSeen': FieldValue.serverTimestamp(),
+  });
+}
+void setupOnlineStatusListener() {
+
+}
 }

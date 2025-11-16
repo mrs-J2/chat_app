@@ -1,6 +1,7 @@
 // lib/pages/chat_page.dart
 import '../components/my_textfield.dart';
 import '../models/message.dart';
+import '../models/user_model.dart';
 import '../services/auth/auth_service.dart';
 import '../services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,17 +30,102 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
   String? _recieverProfilePic;
+  UserModel? _receiverUser;
+  bool _isReceiverOnline = false;
+  String _lastSeenText = "Loading...";
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadReceiverData();
+    _listenToMessagesAndMarkSeen();
+    _authService.setUserOnline();
     _loadRecieverPic();
+  }
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  if (state == AppLifecycleState.paused || 
+      state == AppLifecycleState.detached || 
+      state == AppLifecycleState.inactive) {
+    _authService.setUserOffline();
+  } else if (state == AppLifecycleState.resumed) {
+    _authService.setUserOnline();
+  }
+}
+void _listenToMessagesAndMarkSeen() {
+  final currentUserID = _authService.getCurrentUser()!.uid;
+  List<String> ids = [currentUserID, widget.recieverID]..sort();
+  String chatroomID = ids.join('_');
+
+  FirebaseFirestore.instance
+      .collection("chat_rooms")
+      .doc(chatroomID)
+      .collection("messages")
+      .where('senderID', isEqualTo: widget.recieverID)
+      .where('seen', isEqualTo: false)
+      .snapshots()
+      .listen((snapshot) async {
+    for (var change in snapshot.docChanges) {
+      if (change.type == DocumentChangeType.added || change.type == DocumentChangeType.modified) {
+        await change.doc.reference.update({'seen': true});
+      }
+    }
+  });
+}
+  Future<void> _loadReceiverData() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.recieverID)
+        .get();
+
+    if (doc.exists && mounted) {
+      final user = UserModel.fromMap(doc.data()!, doc.id);
+      setState(() {
+        _receiverUser = user;
+        _recieverProfilePic = user.profilePicUrl;
+        _isReceiverOnline = user.isOnline;
+        _lastSeenText = user.isOnline ? "Online" : _formatLastSeen(user.lastSeen);
+      });
+
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.recieverID)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.exists && mounted) {
+          final updatedUser = UserModel.fromMap(snapshot.data()!, snapshot.id);
+          setState(() {
+            _isReceiverOnline = updatedUser.isOnline;
+            _lastSeenText = updatedUser.isOnline ? "Online" : _formatLastSeen(updatedUser.lastSeen);
+          });
+        }
+      });
+    }
+  }
+
+  String _formatLastSeen(Timestamp? timestamp) {
+    if (timestamp == null) return "Last seen unknown";
+    final now = DateTime.now();
+    final date = timestamp.toDate();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 1) return "Last seen just now";
+    if (diff.inMinutes < 60) return "Last seen ${diff.inMinutes} min ago";
+    if (diff.inHours < 24) return "Last seen ${diff.inHours} hr ago";
+    return "Last seen ${DateFormat('MMM d').format(date)}";
   }
 
   Future<void> _loadRecieverPic() async {
@@ -122,8 +208,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // REMOVE THIS — not needed anymore
-  // void _showReactionPicker(String messageId) { ... }
 
   String _formatTimestamp(Timestamp timestamp) {
     return DateFormat('h:mm a').format(timestamp.toDate());
@@ -135,7 +219,20 @@ class _ChatPageState extends State<ChatPage> {
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         elevation: 0,
-        title: Text(widget.recieverUsername),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.recieverUsername, style: const TextStyle(fontSize: 16)),
+            Text(
+              _lastSeenText,
+              style: TextStyle(
+                fontSize: 12,
+                color: _isReceiverOnline ? Colors.green : Colors.grey,
+                fontWeight: _isReceiverOnline ? FontWeight.w500 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
@@ -196,7 +293,7 @@ class _ChatPageState extends State<ChatPage> {
   if (message.isImage) {
     bubble = _buildImageBubble(message.message);
   } else if (message.isFile) {
-    bubble = _buildFileBubble(message.fileName); // ← Use fileName, NOT message.message
+    bubble = _buildFileBubble(message.fileName);
   } else {
     bubble = ChatBubble(
       clipper: ChatBubbleClipper1(type: isMe ? BubbleType.sendBubble : BubbleType.receiverBubble),
@@ -247,9 +344,23 @@ class _ChatPageState extends State<ChatPage> {
           ),
           Padding(
             padding: EdgeInsets.only(top: 2, bottom: 8, left: isMe ? 0 : 25, right: isMe ? 25 : 0),
-            child: Text(
-              _formatTimestamp(message.timestamp),
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _formatTimestamp(message.timestamp),
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                ),
+                if (isMe) 
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Icon(
+                      message.seen ? Icons.done_all : Icons.done,
+                      size: 14,
+                      color: message.seen ? Colors.blue : Colors.grey,
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -258,7 +369,6 @@ class _ChatPageState extends State<ChatPage> {
   );
 }
 
-  // FIXED: Only double-tap adds heart
   void _toggleHeart(String messageId) async {
     await _chatService.toggleHeart(widget.recieverID, messageId, true);
   }
