@@ -1,16 +1,17 @@
+// lib/pages/chat_page.dart
 import 'package:chat_app/components/my_textfield.dart';
+import 'package:chat_app/models/message.dart';
 import 'package:chat_app/services/auth/auth_service.dart';
 import 'package:chat_app/services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_chat_bubble/chat_bubble.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_chat_bubble/chat_bubble.dart';
-import 'package:intl/intl.dart'; 
 
 class ChatPage extends StatefulWidget {
   final String recieverEmail;
@@ -53,7 +54,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // send text message
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       await _chatService.sendMessage(widget.recieverID, _messageController.text);
@@ -61,39 +61,72 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // send image
   Future<void> sendImageMessage(String receiverID) async {
-    try {
-      final XFile? pickedImage =
-          await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedImage == null) return; 
-      File imageFile = File(pickedImage.path); 
-      await _chatService.sendImageMessage(receiverID, imageFile); 
-      print('✅ Image sent successfully');
-    } catch (e) {
-      print('❌ Error sending image: $e');
-    }
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+    await _chatService.sendImageMessage(receiverID, File(picked.path));
   }
 
-  // send any file
   Future<void> sendFile(String receiverID) async {
-    try {
-      final result = await FilePicker.platform.pickFiles();
-      if (result == null) return;
+    final result = await FilePicker.platform.pickFiles();
+    if (result == null) return;
+    await _chatService.sendFileMessage(receiverID, File(result.files.single.path!));
+  }
 
-      File file = File(result.files.single.path!);
-      await _chatService.sendFileMessage(receiverID, file);
-
-      print("📁 File sent successfully: ${file.path.split('/').last}");
-    } catch (e) {
-      print("❌ Error sending file: $e");
+  void _deleteChat() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Chat"),
+        content: const Text("Delete all messages?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await _chatService.deleteChat(widget.recieverID);
+      if (mounted) Navigator.pop(context);
     }
   }
 
-  // format timestamp
+  void _deleteMessage(String messageId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Message"),
+        content: const Text("Delete for everyone?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      final currentUserID = _authService.getCurrentUser()!.uid;
+      List<String> ids = [currentUserID, widget.recieverID]..sort();
+      String chatroomID = ids.join('_');
+      await FirebaseFirestore.instance
+          .collection("chat_rooms")
+          .doc(chatroomID)
+          .collection("messages")
+          .doc(messageId)
+          .delete();
+    }
+  }
+
+  // REMOVE THIS — not needed anymore
+  // void _showReactionPicker(String messageId) { ... }
+
   String _formatTimestamp(Timestamp timestamp) {
-    DateTime dateTime = timestamp.toDate();
-    return DateFormat('h:mm a').format(dateTime);
+    return DateFormat('h:mm a').format(timestamp.toDate());
   }
 
   @override
@@ -116,10 +149,12 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.call),
-            color: Colors.black,
-            onPressed: () {},
+          IconButton(icon: const Icon(Icons.call), onPressed: () {}),
+          PopupMenuButton<String>(
+            onSelected: (v) => v == 'delete' ? _deleteChat() : null,
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'delete', child: Text("Delete Chat")),
+            ],
           ),
         ],
       ),
@@ -137,117 +172,137 @@ class _ChatPageState extends State<ChatPage> {
     return StreamBuilder(
       stream: _chatService.getMessages(widget.recieverID, senderID),
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Center(child: Text("Error loading messages"));
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Text("Loading messages..."));
-        }
-        return ListView(
-          children: snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+        if (snapshot.hasError) return const Center(child: Text("Error"));
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: Text("Loading..."));
+
+        return ListView.builder(
           reverse: true,
+          itemCount: snapshot.data!.docs.length,
+          itemBuilder: (context, index) {
+            final doc = snapshot.data!.docs[index];
+            final message = Message.fromMap(doc.data() as Map<String, dynamic>);
+            return _buildMessageItem(message, doc.id);
+          },
         );
       },
     );
   }
 
-  Widget _buildMessageItem(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    bool isCurrentUser = data['senderID'] == _authService.getCurrentUser()!.uid;
-    Alignment alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
-    Timestamp timestamp = data['timestamp'];
-    String formattedTime = _formatTimestamp(timestamp);
+ Widget _buildMessageItem(Message message, String messageId) {
+  final bool isMe = message.senderID == _authService.getCurrentUser()!.uid;
 
-    Widget messageContent;
+  Widget bubble;
 
-    if (data['isImage'] == true) {
-      messageContent = _buildImageBubble(data['message']);
-    } else if (data['isFile'] == true) {
-      messageContent = _buildFileBubble(data['fileName'] ?? "Unknown File");
-    } else {
-      messageContent = ChatBubble(
-        clipper: ChatBubbleClipper1(
-          type: isCurrentUser ? BubbleType.sendBubble : BubbleType.receiverBubble,
-        ),
-        alignment: isCurrentUser ? Alignment.topRight : Alignment.topLeft,
-        margin: const EdgeInsets.only(top: 5, bottom: 5),
-        backGroundColor: isCurrentUser ? Colors.green : Colors.grey.shade500,
-        child: Text(
-          data["message"],
-          style: const TextStyle(color: Colors.white),
-        ),
-      );
-    }
+  if (message.isImage) {
+    bubble = _buildImageBubble(message.message);
+  } else if (message.isFile) {
+    bubble = _buildFileBubble(message.fileName); // ← Use fileName, NOT message.message
+  } else {
+    bubble = ChatBubble(
+      clipper: ChatBubbleClipper1(type: isMe ? BubbleType.sendBubble : BubbleType.receiverBubble),
+      alignment: isMe ? Alignment.topRight : Alignment.topLeft,
+      margin: const EdgeInsets.only(top: 5),
+      backGroundColor: isMe ? Colors.green : Colors.grey.shade500,
+      child: Text(message.message, style: const TextStyle(color: Colors.white)),
+    );
+  }
 
-    return Container(
-      alignment: alignment,
+  return GestureDetector(
+    onDoubleTap: () => _toggleHeart(messageId),
+    child: Container(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
       child: Column(
-        crossAxisAlignment:
-            isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          messageContent,
+          Stack(
+            children: [
+              bubble,
+              if (message.heartCount > 0)
+                Positioned(
+                  bottom: 4,
+                  right: isMe ? 8 : null,
+                  left: isMe ? null : 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('heart', style: TextStyle(fontSize: 14)),
+                        const SizedBox(width: 4),
+                        Text(
+                          message.heartCount.toString(),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
           Padding(
-            padding: EdgeInsets.only(
-              top: 2,
-              bottom: 10,
-              left: isCurrentUser ? 0 : 25,
-              right: isCurrentUser ? 25 : 0,
-            ),
+            padding: EdgeInsets.only(top: 2, bottom: 8, left: isMe ? 0 : 25, right: isMe ? 25 : 0),
             child: Text(
-              formattedTime,
+              _formatTimestamp(message.timestamp),
               style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
             ),
           ),
         ],
       ),
-    );
+    ),
+  );
+}
+
+  // FIXED: Only double-tap adds heart
+  void _toggleHeart(String messageId) async {
+    await _chatService.toggleHeart(widget.recieverID, messageId, true);
   }
 
-  Widget _buildImageBubble(String base64String) {
+  Widget _buildImageBubble(String base64) {
     try {
-      final String imageBase64 = base64String.contains('|')
-          ? base64String.split('|')[1]
-          : base64String;
-      Uint8List bytes = base64Decode(imageBase64);
+      final imageData = base64.contains('|') ? base64.split('|')[1] : base64;
       return Container(
-        constraints: const BoxConstraints(maxWidth: 250, maxHeight: 250),
+        constraints: const BoxConstraints(maxWidth: 250),
         margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-        decoration: BoxDecoration(
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(15),
-          color: Colors.grey.shade200,
+          child: Image.memory(base64Decode(imageData), fit: BoxFit.cover),
         ),
-        clipBehavior: Clip.hardEdge,
-        child: Image.memory(bytes, fit: BoxFit.cover),
       );
     } catch (e) {
-      return const Text("Error loading image");
+      return const Text("Image error");
     }
   }
 
-  Widget _buildFileBubble(String fileName) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-      decoration: BoxDecoration(
-        color: Colors.blueGrey.shade400,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.insert_drive_file, color: Colors.white),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              fileName,
-              style: const TextStyle(color: Colors.white),
-              overflow: TextOverflow.ellipsis,
-            ),
+  Widget _buildFileBubble(String? fileName) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
+    decoration: BoxDecoration(
+      color: Colors.blueGrey.shade400,
+      borderRadius: BorderRadius.circular(15),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.insert_drive_file, color: Colors.white, size: 20),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            fileName ?? "File",
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+            overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildUserInput() {
     return Padding(
@@ -256,32 +311,19 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           PopupMenuButton<int>(
             icon: const Icon(Icons.attach_file, color: Colors.grey),
-            onSelected: (value) {
-              if (value == 0) sendImageMessage(widget.recieverID);
-              if (value == 1) sendFile(widget.recieverID);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 0, child: Text("Send Image")),
-              const PopupMenuItem(value: 1, child: Text("Send File")),
+            onSelected: (v) => v == 0 ? sendImageMessage(widget.recieverID) : sendFile(widget.recieverID),
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 0, child: Text("Image")),
+              const PopupMenuItem(value: 1, child: Text("File")),
             ],
           ),
           Expanded(
-            child: MyTextfield(
-              hintText: "Type a message..",
-              obscureText: false,
-              controller: _messageController,
-            ),
+            child: MyTextfield(hintText: "Type a message..", obscureText: false, controller: _messageController),
           ),
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-            ),
             margin: const EdgeInsets.only(right: 25),
-            child: IconButton(
-              onPressed: sendMessage,
-              icon: const Icon(Icons.arrow_upward, color: Colors.white),
-            ),
+            decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+            child: IconButton(onPressed: sendMessage, icon: const Icon(Icons.arrow_upward, color: Colors.white)),
           ),
         ],
       ),
