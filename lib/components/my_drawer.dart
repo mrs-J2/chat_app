@@ -1,6 +1,6 @@
-import 'package:chat_app/services/auth/auth_service.dart';
+import '../services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:chat_app/pages/settings_page.dart';
+import '../pages/settings_page.dart';
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
 

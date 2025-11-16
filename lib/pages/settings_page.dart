@@ -1,6 +1,6 @@
 // lib/pages/settings_page.dart
-import 'package:chat_app/pages/edit_profile_page.dart';
-import 'package:chat_app/services/auth/auth_service.dart';
+import '../pages/edit_profile_page.dart';
+import '../services/auth/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 

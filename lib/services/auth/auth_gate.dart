@@ -1,7 +1,7 @@
-import 'package:chat_app/services/auth/login_or_register.dart';
+import '../../services/auth/login_or_register.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:chat_app/pages/home_page.dart';
+import '../../pages/home_page.dart';
 class AuthGate extends StatelessWidget{
   final VoidCallback? onThemeToggle;          
   const AuthGate({super.key, this.onThemeToggle});

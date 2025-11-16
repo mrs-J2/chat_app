@@ -1,8 +1,8 @@
 // lib/pages/edit_profile_page.dart
-import 'package:chat_app/models/user_model.dart';
-import 'package:chat_app/services/auth/auth_service.dart';
-import 'package:chat_app/components/my_button.dart';
-import 'package:chat_app/components/my_textfield.dart';
+import '../models/user_model.dart';
+import '../services/auth/auth_service.dart';
+import '../components/my_button.dart';
+import '../components/my_textfield.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 

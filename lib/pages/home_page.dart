@@ -1,16 +1,16 @@
 // ignore_for_file: duplicate_import
 
-import 'package:chat_app/components/user_tile.dart';
-import 'package:chat_app/pages/chat_page.dart';
-import 'package:chat_app/pages/friends_page.dart';
-import 'package:chat_app/services/auth/auth_service.dart';
-import 'package:chat_app/components/my_drawer.dart';
-import 'package:chat_app/services/chat/chat_service.dart';
+import '../components/user_tile.dart';
+import '../pages/chat_page.dart';
+import '../pages/friends_page.dart';
+import '../services/auth/auth_service.dart';
+import '../components/my_drawer.dart';
+import '../services/chat/chat_service.dart';
 import 'package:flutter/material.dart';
-import 'package:chat_app/pages/settings_page.dart';
+import '../pages/settings_page.dart';
 
-import 'package:chat_app/controllers/friends_controller.dart';
-import 'package:chat_app/pages/chat_page.dart';
+import '../controllers/friends_controller.dart';
+import '../pages/chat_page.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget{

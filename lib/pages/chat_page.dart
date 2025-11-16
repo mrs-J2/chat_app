@@ -1,8 +1,8 @@
 // lib/pages/chat_page.dart
-import 'package:chat_app/components/my_textfield.dart';
-import 'package:chat_app/models/message.dart';
-import 'package:chat_app/services/auth/auth_service.dart';
-import 'package:chat_app/services/chat/chat_service.dart';
+import '../components/my_textfield.dart';
+import '../models/message.dart';
+import '../services/auth/auth_service.dart';
+import '../services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';

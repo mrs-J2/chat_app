@@ -1,7 +1,7 @@
-import 'package:chat_app/services/auth/auth_gate.dart';
-import 'package:chat_app/services/auth/auth_service.dart';
-import 'package:chat_app/components/my_button.dart';
-import 'package:chat_app/components/my_textfield.dart';
+import '../services/auth/auth_gate.dart';
+import '../services/auth/auth_service.dart';
+import '../components/my_button.dart';
+import '../components/my_textfield.dart';
 import 'package:flutter/material.dart';
 class LoginPage extends StatelessWidget{
   //email and pwdtxt controllers
