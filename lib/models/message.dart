@@ -11,6 +11,7 @@ class Message {
   final bool isFile;
   final String? fileName;
   final int heartCount; 
+  final List<String> likedBy;
   final bool seen;
 
   Message({
@@ -23,6 +24,7 @@ class Message {
     this.isFile = false,
     this.fileName,
     this.heartCount = 0,
+    this.likedBy = const [],
     this.seen= false,
   });
 
@@ -37,7 +39,9 @@ class Message {
       'isFile': isFile,
       'fileName': fileName,
       'heartCount': heartCount,
+      'likedBy': likedBy,
       'seen': seen,
+      
     };
   }
 
@@ -53,6 +57,7 @@ class Message {
       fileName: map['fileName'],
       heartCount: map['heartCount'] ?? 0,
       seen : map['seen'] ?? false,
+      likedBy: List<String>.from(map['likedBy'] ?? []),
     );
   }
 }

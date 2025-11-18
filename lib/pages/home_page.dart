@@ -38,18 +38,20 @@ class _HomePageState extends State<HomePage>{
   Widget build(BuildContext context){
     final controller = Provider.of<FriendsController>(context);
     final List<Widget> _pages = [
-      _buildFriendsChatList(),
-      const FriendsPage(), 
-      SettingsPage(onThemeToggle: widget.onThemeToggle), 
+      Scaffold(
+      drawer: MyDrawer(),
+      appBar: AppBar(
+        title: const Text("Chats"),
+        elevation: 0,
+      ),
+      body: _buildFriendsChatList(),
+    ),
+    const FriendsPage(),
+    SettingsPage(onThemeToggle: widget.onThemeToggle),
     ];
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
       drawer: MyDrawer(),
       body: _pages[_selectedIndex],
-      appBar: AppBar(
-        elevation: 0,
-        title: const Text("Chats"),
-        ),
         bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
@@ -77,8 +79,7 @@ class _HomePageState extends State<HomePage>{
         ],
       ),
       );
-  }
-
+  } 
 
   Widget _buildFriendsChatList() {
     return Consumer<FriendsController>(

@@ -3,6 +3,7 @@ import '../../models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 
@@ -111,28 +112,41 @@ class ChatService {
   }
 }
 
-  // TOGGLE HEART (Instagram-style)
-  Future<void> toggleHeart(String receiverID, String messageId, bool addHeart) async {
-    final currentUserID = _auth.currentUser!.uid;
-    List<String> ids = [currentUserID, receiverID]..sort();
-    String chatroomID = ids.join('_');
+  Future<void> toggleHeart(String receiverID, String messageId) async {
+  final currentUserID = _auth.currentUser!.uid;
+  List<String> ids = [currentUserID, receiverID]..sort();
+  String chatroomID = ids.join('_');
 
-    final messageRef = _firestore
-        .collection("chat_rooms")
-        .doc(chatroomID)
-        .collection("messages")
-        .doc(messageId);
+  final messageRef = _firestore
+      .collection("chat_rooms")
+      .doc(chatroomID)
+      .collection("messages")
+      .doc(messageId);
 
-    await _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(messageRef);
-      if (!snapshot.exists) return;
+  await _firestore.runTransaction((transaction) async {
+    final snapshot = await transaction.get(messageRef);
+    if (!snapshot.exists) return;
 
-      final currentCount = snapshot.data()?['heartCount'] ?? 0;
-      final newCount = addHeart ? currentCount + 1 : currentCount;
+    final data = snapshot.data()!;
+    final likedBy = List<String>.from(data['likedBy'] ?? []);
 
-      transaction.update(messageRef, {'heartCount': newCount});
-    });
-  }
+    if (likedBy.contains(currentUserID)) {
+      // User already liked → remove like
+      likedBy.remove(currentUserID);
+      transaction.update(messageRef, {
+        'likedBy': likedBy,
+        'heartCount': likedBy.length,
+      });
+    } else {
+      // User hasn't liked → add like
+      likedBy.add(currentUserID);
+      transaction.update(messageRef, {
+        'likedBy': likedBy,
+        'heartCount': likedBy.length,
+      });
+    }
+  });
+}
 
   // get messages
   Stream<QuerySnapshot> getMessages(String userId, String otherUserID) {

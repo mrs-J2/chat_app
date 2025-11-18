@@ -9,6 +9,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart'; 
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -216,35 +218,39 @@ void _listenToMessagesAndMarkSeen() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      //backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.recieverUsername, style: const TextStyle(fontSize: 16)),
-            Text(
-              _lastSeenText,
-              style: TextStyle(
-                fontSize: 12,
-                color: _isReceiverOnline ? Colors.green : Colors.grey,
-                fontWeight: _isReceiverOnline ? FontWeight.w500 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            radius: 18,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context), 
+      ),
+      title: Row(
+        children: [
+          CircleAvatar(
             backgroundImage: _recieverProfilePic != null && _recieverProfilePic!.isNotEmpty
                 ? NetworkImage(_recieverProfilePic!)
                 : null,
             child: _recieverProfilePic == null || _recieverProfilePic!.isEmpty
-                ? const Icon(Icons.person, size: 18)
+                ? const Icon(Icons.person)
                 : null,
           ),
-        ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.recieverUsername,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                _isReceiverOnline ? "Online" : _lastSeenText,
+                style: TextStyle(fontSize: 12, color: _isReceiverOnline ? Colors.green : Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      ),
+        elevation: 0,
         actions: [
           IconButton(icon: const Icon(Icons.call), onPressed: () {}),
           PopupMenuButton<String>(
@@ -293,8 +299,9 @@ void _listenToMessagesAndMarkSeen() {
   if (message.isImage) {
     bubble = _buildImageBubble(message.message);
   } else if (message.isFile) {
-    bubble = _buildFileBubble(message.fileName);
-  } else {
+  final fileBase64 = message.message; // contains "timestamp|base64data"
+  bubble = _buildFileBubble(message.fileName, fileBase64);
+  }else {
     bubble = ChatBubble(
       clipper: ChatBubbleClipper1(type: isMe ? BubbleType.sendBubble : BubbleType.receiverBubble),
       alignment: isMe ? Alignment.topRight : Alignment.topLeft,
@@ -317,26 +324,32 @@ void _listenToMessagesAndMarkSeen() {
               bubble,
               if (message.heartCount > 0)
                 Positioned(
-                  bottom: 4,
-                  right: isMe ? 8 : null,
-                  left: isMe ? null : 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('heart', style: TextStyle(fontSize: 14)),
-                        const SizedBox(width: 4),
-                        Text(
-                          message.heartCount.toString(),
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  bottom: 1,
+                  right: isMe ? 1 : null,
+                  left: isMe ? null : 5,
+                  child: Transform.translate(
+                    offset: const Offset(0, 8), 
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
-                      ],
+                        child: Row(
+                          children: [
+                            const Text('❤️', style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -370,7 +383,7 @@ void _listenToMessagesAndMarkSeen() {
 }
 
   void _toggleHeart(String messageId) async {
-    await _chatService.toggleHeart(widget.recieverID, messageId, true);
+    await _chatService.toggleHeart(widget.recieverID, messageId);
   }
 
   Widget _buildImageBubble(String base64) {
@@ -389,27 +402,77 @@ void _listenToMessagesAndMarkSeen() {
     }
   }
 
-  Widget _buildFileBubble(String? fileName) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-    decoration: BoxDecoration(
-      color: Colors.blueGrey.shade400,
-      borderRadius: BorderRadius.circular(15),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.insert_drive_file, color: Colors.white, size: 20),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            fileName ?? "File",
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-            overflow: TextOverflow.ellipsis,
+  Widget _buildFileBubble(String? fileName, String base64Data) {
+  return GestureDetector(
+    onTap: () async {
+      try {
+        // Show loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Downloading file...")),
+        );
+
+        // Decode base64
+        final bytes = base64Decode(base64Data.contains('|') ? base64Data.split('|')[1] : base64Data);
+
+        // Get downloads directory
+        final dir = await getDownloadsDirectory() ?? await getTemporaryDirectory();
+        final filePath = '${dir.path}/$fileName';
+
+        // Write file
+        final file = File(filePath);
+        await file.writeAsBytes(bytes);
+
+        // Hide loading + show success
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("File saved!"),
+            action: SnackBarAction(
+              label: "Open",
+              onPressed: () => OpenFile.open(filePath),
+            ),
           ),
-        ),
-      ],
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Download failed: $e")),
+        );
+      }
+    },
+    child: Container(
+      padding: const EdgeInsets.all(14),
+      
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade600,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.file_copy, color: Colors.white, size: 28),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fileName ?? "File",
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  "Tap to download",
+                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Icon(Icons.download_rounded, color: Colors.white70, size: 22),
+        ],
+      ),
     ),
   );
 }

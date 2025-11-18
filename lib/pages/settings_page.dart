@@ -3,6 +3,7 @@ import '../pages/edit_profile_page.dart';
 import '../services/auth/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../components/my_drawer.dart';
 
 import '../models/user_model.dart';
 
@@ -16,6 +17,7 @@ class SettingsPage extends StatelessWidget {
     final user = AuthService().getCurrentUser()!;
 
     return Scaffold(
+      drawer: MyDrawer(),
       appBar: AppBar(
         title: const Text("Settings"),
         centerTitle: true,
