@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^4.2.0
+  firebase_core: ^4.2.1
   cupertino_icons: ^1.0.8
   firebase_auth: ^6.1.1
   cloud_firestore: ^6.0.3
@@ -30,6 +30,13 @@ dependencies:
   record: ^6.1.2
   open_file: ^3.5.10
   path_provider: ^2.1.5
+  google_generative_ai: ^0.4.7
+  http: ^1.6.0
+  flutter_gemini: ^3.0.0
+  flutter_secure_storage: ^9.2.4
+  firebase_ai: ^3.6.0
+  flutter_ai_toolkit: ^0.10.0
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -40,5 +47,18 @@ dev_dependencies:
 flutter:
 
   uses-material-design: true
+  assets:
+    - lib/assets/icon/
 
+flutter_launcher_icons:
+  # All lines below must be indented by exactly TWO spaces
+  image_path: "lib/assets/icon/logo.png" 
   
+  android_adaptive_icon_background: "#FFFFFF" 
+  
+  android: true
+  ios: true
+  web: 
+    generate: false
+  macos: 
+    generate: false

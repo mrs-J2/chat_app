@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-
+import 'chat_background_theme.dart';
 ThemeData darkMode = ThemeData(
 
   colorScheme: const ColorScheme.dark(
@@ -15,7 +15,11 @@ ThemeData darkMode = ThemeData(
     inversePrimary: Color(0xFF075E54),
     tertiary: Color(0xFF25D366),   
   ),
-
+  extensions: <ThemeExtension<dynamic>>[
+    const ChatBackgroundTheme(
+      chatBackgroundPath: 'lib/assets/icon/background2.jpg', // ⬅️ Dark Mode Image
+    ),
+  ],
   appBarTheme: const AppBarTheme(
     backgroundColor: Color(0xFF111B21),
     foregroundColor: Colors.white,   

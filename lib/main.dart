@@ -1,15 +1,18 @@
+
 import 'controllers/friends_controller.dart';
 import 'services/auth/auth_gate.dart';
 import 'services/auth/login_or_register.dart';
 import 'firebase_options.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 import 'pages/register_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'pages/login_page.dart';
 import 'themes/light_mode.dart';
-
+import 'pages/ai_chat_page.dart';
 import 'themes/dark_mode.dart';
+import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +20,7 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
   runApp(
     MultiProvider(
       providers: [

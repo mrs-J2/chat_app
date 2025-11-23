@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
+import '../themes/chat_background_theme.dart';
 
 class ChatPage extends StatefulWidget {
   final String recieverEmail;
@@ -37,6 +38,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
+  
   String? _recieverProfilePic;
   UserModel? _receiverUser;
   bool _isReceiverOnline = false;
@@ -217,8 +219,8 @@ void _listenToMessagesAndMarkSeen() {
 
   @override
   Widget build(BuildContext context) {
+  final backgroundPath = ChatBackgroundTheme.of(context).chatBackgroundPath;
     return Scaffold(
-      //backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
@@ -261,11 +263,19 @@ void _listenToMessagesAndMarkSeen() {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(child: _buildMessageList()),
-          _buildUserInput(),
-        ],
+      body: Container( // ⬅️ NEW: Container for the background
+        decoration:  BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(backgroundPath),
+            fit: BoxFit.cover, 
+          ),
+        ),
+        child: Column( // ⬅️ OLD Column is now the child of the Container
+          children: [
+            Expanded(child: _buildMessageList()),
+            _buildUserInput(),
+          ],
+        ),
       ),
     );
   }
@@ -306,7 +316,7 @@ void _listenToMessagesAndMarkSeen() {
       clipper: ChatBubbleClipper1(type: isMe ? BubbleType.sendBubble : BubbleType.receiverBubble),
       alignment: isMe ? Alignment.topRight : Alignment.topLeft,
       margin: const EdgeInsets.only(top: 5),
-      backGroundColor: isMe ? Colors.green : Colors.grey.shade500,
+      backGroundColor: isMe ? Theme.of(context).colorScheme.primary : Colors.grey.shade500,
       child: Text(message.message, style: const TextStyle(color: Colors.white)),
     );
   }
@@ -441,7 +451,7 @@ void _listenToMessagesAndMarkSeen() {
     },
     child: Container(
       padding: const EdgeInsets.all(14),
-      
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
       decoration: BoxDecoration(
         color: Colors.blueGrey.shade600,
         borderRadius: BorderRadius.circular(18),

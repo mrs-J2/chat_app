@@ -2,6 +2,7 @@ import '../services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../components/my_button.dart';
 import '../components/my_textfield.dart';
+const String _kAppLogoPath = "lib/assets/icon/logo.png";
 class RegisterPage extends StatelessWidget{
   
   //email and pwdtxt controllers
@@ -109,120 +110,127 @@ final void Function()? onTap;
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                //logo
-                Icon(Icons.message,
-                size: 60,
-                color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 50),
-              
-                //welcome back message
-                Text(
-                  "Let's create an account for you",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 25),
-                //first name textfield
-                MyTextfield(
-                  hintText: "First Name",
-                  obscureText: false,
-                  controller: _firstNameController,
-                ), 
-                const SizedBox(height: 10),
-
-                // Last Name textfield (NEW)
-                MyTextfield(
-                  hintText: "Last Name",
-                  obscureText: false,
-                  controller: _lastNameController,
-                ), 
-                const SizedBox(height: 10),
-
-                //date of birth textfield
-               GestureDetector(
-                onTap: () => _selectDate(context),
-                child: AbsorbPointer( // Prevents manual  input
-                  child: MyTextfield(
-                    hintText: "Date of Birth (YYYY-MM-DD)",
-                    obscureText: false,
-                    controller: _dobController,
-                  ),
-                ),
+      body: Container(
+        decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(
+                Theme.of(context).brightness == Brightness.light
+                    ? "lib/assets/icon/light.jpg"
+                    : "lib/assets/icon/dark.png",
               ),
-                const SizedBox(height: 10),
-
-                //username textfield
-                MyTextfield(
-                  hintText: "Username (Unique)",
-                  obscureText: false,
-                  controller: _usernameController,
-                ), 
-                const SizedBox(height: 10),
-
-
-                //email textfield
-                MyTextfield(
-                  hintText: "Email" ,
-                  obscureText: false,
-                  controller: _emailController,
-                ),  
-                const SizedBox(height: 10),
-
-                //password textfield
-                MyTextfield(
-                  hintText: "Password",
-                  obscureText: true,
-                  controller: _pwController),
-            
-                  const SizedBox(height: 10),
-                //confirm password textfield
-                MyTextfield(
-                  hintText: "Confirm Password",
-                  obscureText: true,
-                  controller: _confirmPwController),
-            
+              fit: BoxFit.cover,
+            ),
+          ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  //logo
+                  Image.asset(_kAppLogoPath,height: 130,),
+                  //welcome back message
+                  Text(
+                    "Let's create an account for you",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 25),
-                //login button
-                MyButton(
-                  text: "Register",
-                  onTap: () => register(context),
+                  //first name textfield
+                  MyTextfield(
+                    hintText: "First Name",
+                    obscureText: false,
+                    controller: _firstNameController,
+                  ), 
+                  const SizedBox(height: 10),
+        
+                  // Last Name textfield (NEW)
+                  MyTextfield(
+                    hintText: "Last Name",
+                    obscureText: false,
+                    controller: _lastNameController,
+                  ), 
+                  const SizedBox(height: 10),
+        
+                  //date of birth textfield
+                 GestureDetector(
+                  onTap: () => _selectDate(context),
+                  child: AbsorbPointer( // Prevents manual  input
+                    child: MyTextfield(
+                      hintText: "Date of Birth (YYYY-MM-DD)",
+                      obscureText: false,
+                      controller: _dobController,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 25),
-            
-                //register now
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "already have an account? ",
-                      style: 
-                      TextStyle(color: Theme.of(context).colorScheme.primary),
-                      ),
-            
-                    GestureDetector(
-                      onTap: onTap,
-                      child: Text(
-                        "login now ",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary
+                  const SizedBox(height: 10),
+        
+                  //username textfield
+                  MyTextfield(
+                    hintText: "Username (Unique)",
+                    obscureText: false,
+                    controller: _usernameController,
+                  ), 
+                  const SizedBox(height: 10),
+        
+        
+                  //email textfield
+                  MyTextfield(
+                    hintText: "Email" ,
+                    obscureText: false,
+                    controller: _emailController,
+                  ),  
+                  const SizedBox(height: 10),
+        
+                  //password textfield
+                  MyTextfield(
+                    hintText: "Password",
+                    obscureText: true,
+                    controller: _pwController),
+              
+                    const SizedBox(height: 10),
+                  //confirm password textfield
+                  MyTextfield(
+                    hintText: "Confirm Password",
+                    obscureText: true,
+                    controller: _confirmPwController),
+              
+                    const SizedBox(height: 25),
+                  //login button
+                  MyButton(
+                    text: "Register",
+                    onTap: () => register(context),
+                  ),
+                  const SizedBox(height: 25),
+              
+                  //register now
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "already have an account? ",
+                        style: 
+                        TextStyle(color: Theme.of(context).colorScheme.primary),
                         ),
-                        ),
-                    )
-                  ],
-                )
-            
-              ],
+              
+                      GestureDetector(
+                        onTap: onTap,
+                        child: Text(
+                          "login now ",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary
+                          ),
+                          ),
+                      )
+                    ],
+                  )
+              
+                ],
+              ),
             ),
           ),
         ),

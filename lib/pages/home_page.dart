@@ -13,6 +13,8 @@ import '../controllers/friends_controller.dart';
 import '../pages/chat_page.dart';
 import 'package:provider/provider.dart';
 
+import 'ai_chat_page.dart';
+
 class HomePage extends StatefulWidget{
    final VoidCallback? onThemeToggle;  
   const HomePage({super.key, this.onThemeToggle});
@@ -44,7 +46,26 @@ class _HomePageState extends State<HomePage>{
         title: const Text("Chats"),
         elevation: 0,
       ),
-      body: _buildFriendsChatList(),
+      body: Stack(
+      children: [
+        // BACKGROUND IMAGE
+        Container(
+          decoration:  BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(
+                Theme.of(context).brightness == Brightness.light
+                ? "lib/assets/icon/light.jpg"
+                : "lib/assets/icon/dark.png"
+                ),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+
+        // CHAT LIST
+        _buildFriendsChatList(),
+      ],
+    ),
     ),
     const FriendsPage(),
     SettingsPage(onThemeToggle: widget.onThemeToggle),
@@ -81,39 +102,77 @@ class _HomePageState extends State<HomePage>{
       );
   } 
 
-  Widget _buildFriendsChatList() {
-    return Consumer<FriendsController>(
-      builder: (context, controller, _) {
-        final currentUser = _authService.getCurrentUser()!;
-        final friendUsers = controller.allUsers
-            .where((user) => controller.friends.contains(user.uid))
-            .toList();
+Widget _buildFriendsChatList() {
+  return Consumer<FriendsController>(
+    builder: (context, controller, _) {
+      final currentUser = _authService.getCurrentUser()!;
+      final friendUsers = controller.allUsers
+          .where((user) => controller.friends.contains(user.uid))
+          .toList();
 
-        if (friendUsers.isEmpty) {
-          return const Center(child: Text("No friends yet."));
-        }
+      // AI Contact — ALWAYS shown at the top
+      final aiContact = UserTile(
+        text: "Grok AI",
+        profilePicUrl: "https://www.toolshero.com/wp-content/uploads/2023/01/artificial-intelligence-ai-toolshero.jpg",
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AIChatPage()),
+          );
+        },
+      );
 
-        return ListView(
-          children: friendUsers.map((user) {
-            return UserTile(
-              text: user.username,
-              profilePicUrl: user.profilePicUrl,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatPage(
-                      recieverEmail: user.email,
-                      recieverID: user.uid,
-                      recieverUsername: user.username,
+      return RefreshIndicator(
+        onRefresh: () async => await controller.refresh(),
+        color: Colors.green,
+        child: controller.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  // GROK AI ALWAYS FIRST
+                  aiContact,
+
+                  // Divider only if there are friends
+                  if (friendUsers.isNotEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(
+                        "Your Chats",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey),
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
+                    ...friendUsers.map((user) => UserTile(
+                          text: user.username,
+                          profilePicUrl: user.profilePicUrl,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatPage(
+                                  recieverEmail: user.email,
+                                  recieverID: user.uid,
+                                  recieverUsername: user.username,
+                                ),
+                              ),
+                            );
+                          },
+                        )),
+                  ] else ...[
+                    // When no friends yet
+                    const SizedBox(height: 100),
+                    const Center(
+                      child: Text(
+                        "No chats yet\nStart by adding friends!",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+      );
+    },
+  );
+}
 }

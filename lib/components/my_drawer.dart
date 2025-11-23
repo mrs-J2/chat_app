@@ -1,6 +1,11 @@
+import 'package:chat_app_main/pages/friends_page.dart';
+
 import '../services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../pages/settings_page.dart';
+
+const String _kAppLogoPath = "lib/assets/icon/logo.png";
+
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
 
@@ -17,13 +22,14 @@ class MyDrawer extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(children: [//logo
+          Column(children: [
+          //logo
           DrawerHeader(
             child: Center(
-              child: Icon(
-                Icons.message,
-                color: Theme.of(context).colorScheme.primary,
-                size: 40),
+              child: Image.asset(
+                _kAppLogoPath,
+                height: 130,
+              ),
             ),
           ),
         //home list tile
@@ -40,7 +46,7 @@ class MyDrawer extends StatelessWidget {
         ),
         //setting list tile
         Padding(
-          padding: const EdgeInsets.only(left: 25.0, bottom:25.0 ),
+          padding: const EdgeInsets.only(left: 25.0,),
           child: ListTile(
             title: Text("S E T T I N G S"),
             leading: Icon(Icons.settings),
@@ -51,7 +57,21 @@ class MyDrawer extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
             },
           ),
-        ),],),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 25.0, bottom:25.0 ),
+          child: ListTile(
+            title: Text("F R I E N D S"),
+            leading: Icon(Icons.person),
+            onTap: () {
+              //pop the drawer
+              Navigator.pop(context);
+              //navigate to settings page
+              Navigator.push(context, MaterialPageRoute(builder: (context) => FriendsPage()));
+            },
+          ),
+        ),
+        ],),
           
         //logout list tile
         Padding(

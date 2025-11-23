@@ -10,7 +10,7 @@ import '../services/friends/friends_service.dart';
 class FriendsController extends ChangeNotifier {
   final FriendsService _friendsService = FriendsService();
   bool get hasIncomingRequests => friendRequests.isNotEmpty;
-
+  bool isLoading = false;
   List<UserModel> allUsers = [];
   List<String> friends = [];
   List<String> friendRequests = [];
@@ -98,8 +98,23 @@ class FriendsController extends ChangeNotifier {
     }
   }
 
-  Future<void> refresh() async => _fetchInitialData();
+  Future<void> refresh() async {
+  isLoading = true;
+  notifyListeners();
 
+  try {
+    // Re-fetch everything from server (exactly like initial load)
+    await Future.wait([
+      _fetchInitialAllUsers(),
+      _fetchInitialCurrentUser(),
+    ]);
+  } catch (e) {
+    debugPrint("Refresh failed: $e");
+  } finally {
+    isLoading = false;
+    notifyListeners();
+  }
+}
   Future<void> sendRequest(String uid) => _friendsService.sendFriendRequest(uid);
   Future<void> acceptRequest(String uid) => _friendsService.acceptFriendRequest(uid);
   Future<void> declineRequest(String uid) => _friendsService.declineFriendRequest(uid);

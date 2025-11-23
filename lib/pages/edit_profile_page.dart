@@ -90,50 +90,63 @@ class _EditProfilePageState extends State<EditProfilePage> {
         centerTitle: true,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(25),
-        child: Column(
-          children: [
-            MyTextfield(
-              hintText: "First Name",
-              obscureText: false,
-              controller: _firstNameController,
+      body: Container(
+        decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(
+                Theme.of(context).brightness == Brightness.light
+                    ? "lib/assets/icon/light.jpg"
+                    : "lib/assets/icon/dark.png",
+              ),
+              fit: BoxFit.cover,
             ),
-            const SizedBox(height: 10),
-            MyTextfield(
-              hintText: "Last Name",
-              obscureText: false,
-              controller: _lastNameController,
-            ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: _selectDate,
-              child: AbsorbPointer(
-                child: MyTextfield(
-                  hintText: "Date of Birth (YYYY-MM-DD)",
-                  obscureText: false,
-                  controller: _dobController,
+          ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(25),
+          child: Column(
+            children: [
+              MyTextfield(
+                hintText: "First Name",
+                obscureText: false,
+                controller: _firstNameController,
+              ),
+              const SizedBox(height: 10),
+              MyTextfield(
+                hintText: "Last Name",
+                obscureText: false,
+                controller: _lastNameController,
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: _selectDate,
+                child: AbsorbPointer(
+                  child: MyTextfield(
+                    hintText: "Date of Birth (YYYY-MM-DD)",
+                    obscureText: false,
+                    controller: _dobController,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            MyTextfield(
-              hintText: "Username",
-              obscureText: false,
-              controller: _usernameController,
-            ),
-            const SizedBox(height: 10),
-            MyTextfield(
-              hintText: "Profile Picture URL (optional)",
-              obscureText: false,
-              controller: _profilePicController,
-            ),
-            const SizedBox(height: 30),
-            MyButton(
-              text: "Save Changes",
-              onTap: _saveProfile,
-            ),
-          ],
+              const SizedBox(height: 10),
+              MyTextfield(
+                hintText: "Username",
+                obscureText: false,
+                controller: _usernameController,
+              ),
+              const SizedBox(height: 10),
+              MyTextfield(
+                hintText: "Profile Picture URL (optional)",
+                obscureText: false,
+                controller: _profilePicController,
+              ),
+              const SizedBox(height: 30),
+              MyButton(
+                text: "Save Changes",
+                onTap: _saveProfile,
+              ),
+              const SizedBox(height: 220),
+            ],
+          ),
         ),
       ),
     );

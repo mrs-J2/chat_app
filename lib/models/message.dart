@@ -13,6 +13,7 @@ class Message {
   final int heartCount; 
   final List<String> likedBy;
   final bool seen;
+  
 
   Message({
     required this.senderID,
